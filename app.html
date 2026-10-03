@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Planner</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #eef7f0;
+            color: #222;
+        }
+
+        header {
+            background: #0b7a3b;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+        }
+
+        header p {
+            margin-top: 8px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .card h2 {
+            color: #0b7a3b;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #0b7a3b;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #075c2d;
+        }
+
+        .result {
+            display: none;
+        }
+
+        .success {
+            color: #0b7a3b;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .warning {
+            color: #d97706;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .result-box {
+            background: #f4faf5;
+            padding: 15px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border-left: 5px solid #0b7a3b;
+        }
+
+        .station {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .station strong {
+            color: #0b7a3b;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>⚡ EV Charging Planner</h1>
+    <p>Smart route and charging station recommendation system</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>🚗 Plan Your EV Trip</h2>
+
+        <div class="form-group">
+            <label>Starting Point</label>
+            <select id="start">
+                <option value="Home">Home</option>
+                <option value="Station A">Station A</option>
+                <option value="Station B">Station B</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Destination</label>
+            <select id="destination">
+                <option value="Destination">Destination</option>
+                <option value="Station C">Station C</option>
+                <option value="Station D">Station D</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Current Battery (%)</label>
+            <input type="number" id="battery"
+                   min="0" max="100"
+                   placeholder="Enter battery percentage">
+        </div>
+
+        <div class="form-group">
+            <label>Battery Range (km at 100%)</label>
+            <input type="number" id="range"
+                   value="100"
+                   min="10">
+        </div>
+
+        <button onclick="planTrip()">
+            🔍 Find Best Route
+        </button>
+    </div>
+
+
+    <div class="card result" id="result">
+
+        <h2>📊 Trip Result</h2>
+
+        <div class="result-box">
+            <p id="status"></p>
+        </div>
+
+        <div class="result-box">
+            <strong>🛣️ Recommended Route</strong>
+            <p id="route"></p>
+        </div>
+
+        <div class="result-box">
+            <strong>📏 Distance</strong>
+            <p id="distance"></p>
+        </div>
+
+        <div class="result-box">
+            <strong>🔋 Battery Required</strong>
+            <p id="batteryRequired"></p>
+        </div>
+
+        <div class="result-box" id="chargingResult">
+            <strong>⚡ Recommended Charging Station</strong>
+            <p id="station"></p>
+            <p id="chargingCost"></p>
+            <p id="chargingTime"></p>
+        </div>
+
+    </div>
+
+
+    <div class="card">
+        <h2>⚡ Available Charging Stations</h2>
+
+        <div class="station">
+            <strong>Station A</strong>
+            <p>Availability: 🟢 Available</p>
+            <p>Charging Cost: ₹8/kWh</p>
+            <p>Charging Time: 30 minutes</p>
+        </div>
+
+        <div class="station">
+            <strong>Station B</strong>
+            <p>Availability: 🟢 Available</p>
+            <p>Charging Cost: ₹6/kWh</p>
+            <p>Charging Time: 25 minutes</p>
+        </div>
+
+        <div class="station">
+            <strong>Station C</strong>
+            <p>Availability: 🔴 Busy</p>
+            <p>Charging Cost: ₹7/kWh</p>
+            <p>Charging Time: 30 minutes</p>
+        </div>
+
+        <div class="station">
+            <strong>Station D</strong>
+            <p>Availability: 🟢 Available</p>
+            <p>Charging Cost: ₹5/kWh</p>
+            <p>Charging Time: 20 minutes</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>EV Charging Planner | Hackathon Project</p>
+</div>
+
+
+<script>
+
+    // Graph representing roads and distances
+    const graph = {
+        "Home": {
+            "Station A": 5,
+            "Station B": 8
+        },
+
+        "Station A": {
+            "Home": 5,
+            "Station C": 6,
+            "Station D": 4
+        },
+
+        "Station B": {
+            "Home": 8,
+            "Station D": 3
+        },
+
+        "Station C": {
+            "Station A": 6,
+            "Destination": 7
+        },
+
+        "Station D": {
+            "Station A": 4,
+            "Station B": 3,
+            "Destination": 5
+        },
+
+        "Destination": {
+            "Station C": 7,
+            "Station D": 5
+        }
+    };
+
+
+    // Charging station data
+    const stations = [
+        {
+            name: "Hyderabad",
+            available: true,
+            cost: 8,
+            time: 30
+        },
+
+        {
+            name: "Warangal",
+            available: true,
+            cost: 6,
+            time: 25
+        },
+
+        {
+            name: "Vijayawada",
+            available: false,
+            cost: 7,
+            time: 30
+        },
+
+        {
+            name: "Chitoor",
+            ",
+            available: true,
+            cost: 5,
+            time: 20
+        }
+    ];
+
+
+    // Dijkstra's shortest path algorithm
+    function dijkstra(start, destination) {
+
+        let distances = {};
+        let previous = {};
+        let visited = new Set();
+
+        for (let node in graph) {
+            distances[node] = Infinity;
+            previous[node] = null;
+        }
+
+        distances[start] = 0;
+
+        while (visited.size < Object.keys(graph).length) {
+
+            let current = null;
+            let shortest = Infinity;
+
+            for (let node in distances) {
+
+                if (!visited.has(node) &&
+                    distances[node] < shortest) {
+
+                    shortest = distances[node];
+                    current = node;
+                }
+            }
+
+            if (current === null)
+                break;
+
+            visited.add(current);
+
+            for (let neighbor in graph[current]) {
+
+                let newDistance =
+                    distances[current] +
+                    graph[current][neighbor];
+
+                if (newDistance < distances[neighbor]) {
+
+                    distances[neighbor] = newDistance;
+                    previous[neighbor] = current;
+                }
+            }
+        }
+
+        // Build path
+        let path = [];
+        let current = destination;
+
+        while (current !== null) {
+            path.unshift(current);
+            current = previous[current];
+        }
+
+        return {
+            distance: distances[destination],
+            path: path
+        };
+    }
+
+
+    // Greedy algorithm
+    // Select cheapest available charging station
+    function findBestStation() {
+
+        let availableStations =
+            stations.filter(station => station.available);
+
+        availableStations.sort(
+            (a, b) => a.cost - b.cost
+        );
+
+        return availableStations[0];
+    }
+
+
+    // Main planner
+    function planTrip() {
+
+        let start =
+            document.getElementById("start").value;
+
+        let destination =
+            document.getElementById("destination").value;
+
+        let battery =
+            Number(document.getElementById("battery").value);
+
+        let range =
+            Number(document.getElementById("range").value);
+
+
+        if (battery < 0 || battery > 100 || !battery) {
+
+            alert("Please enter a valid battery percentage.");
+
+            return;
+        }
+
+
+        if (start === destination) {
+
+            alert("Starting point and destination cannot be same.");
+
+            return;
+        }
+
+
+        // Calculate shortest route
+        let result =
+            dijkstra(start, destination);
+
+        let distance =
+            result.distance;
+
+        let route =
+            result.path;
+
+
+        // Battery required
+        let batteryRequired =
+            (distance / range) * 100;
+
+
+        // Display result
+        document.getElementById("result").style.display =
+            "block";
+
+
+        document.getElementById("route").innerText =
+            route.join(" → ");
+
+
+        document.getElementById("distance").innerText =
+            distance + " km";
+
+
+        document.getElementById("batteryRequired").innerText =
+            batteryRequired.toFixed(1) + "%";
+
+
+        // Check battery
+        if (battery >= batteryRequired) {
+
+            document.getElementById("status").innerText =
+                "✅ You can reach the destination without charging.";
+
+            document.getElementById("status").className =
+                "success";
+
+            document.getElementById("chargingResult").style.display =
+                "none";
+
+        }
+
+        else {
+
+            let station =
+                findBestStation();
+
+            document.getElementById("status").innerText =
+                "⚠️ Charging is required before reaching the destination.";
+
+            document.getElementById("status").className =
+                "warning";
+
+
+            document.getElementById("chargingResult").style.display =
+                "block";
+
+
+            document.getElementById("station").innerText =
+                "Recommended: " + station.name;
+
+
+            document.getElementById("chargingCost").innerText =
+                "💰 Charging Cost: ₹" +
+                station.cost +
+                "/kWh";
+
+
+            document.getElementById("chargingTime").innerText =
+                "⏱️ Estimated Charging Time: " +
+                station.time +
+                " minutes";
+        }
+    }
+
+</script>
+
+</body>
+</html>
